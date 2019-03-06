@@ -4,7 +4,7 @@ import time
 from natsort import natsorted
 
 import multiprocessing
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, AgglomerativeClustering
 
 
 
@@ -22,7 +22,61 @@ def estimate_background_probs(adt, random_state = 0):
 
 	adt.uns['background_probs'] = pvec
 
+def estimate_background_probs_hierarchical(adt, linkage = 'ward'):
+	adt.obs['counts'] = adt.X.sum(axis = 1).A1
+	A = np.log10(adt.obs['counts'].values)
+	df = pd.DataFrame({'count_log10': A}).sort_values(by = ['count_log10'])
+	num = A.size
+	K = 500
+	A_sorted = df['count_log10'].values
+	g_size = int(np.floor(num / (K - 1)))
+	cnt = 0
+	cluster_means = []
+	while cnt < num:
+		if num - cnt < g_size:
+			cluster_means.append(np.mean(A_sorted[cnt:]))
+			cnt = num
+		else:
+			cluster_means.append(np.mean(A_sorted[cnt:(cnt + g_size)]))
+			cnt += g_size
 
+	X = np.array(cluster_means).reshape(-1, 1)
+	clustering = AgglomerativeClustering(n_clusters = 2, linkage = linkage).fit(X)
+
+	cnt = 0
+	labels = []
+	group_cnt = 0
+	while cnt < num:
+		if num - cnt < g_size:
+			labels = labels + [clustering.labels_[group_cnt]] * (num - cnt)
+			cnt = num
+		else:
+			labels = labels + [clustering.labels_[group_cnt]] * g_size
+			cnt += g_size
+		group_cnt += 1
+
+	df['label'] = np.array(labels)
+	df = df.sort_index()
+	signal = 0 if np.mean(df.loc[df['label'] == 0, 'count_log10']) > np.mean(df.loc[df['label'] == 1, 'count_log10']) else 1
+	adt.obs['hto_type'] = 'background'
+	adt.obs.loc[df['label'].values == signal, 'hto_type'] = 'signal'
+
+	idx = np.isin(adt.obs['hto_type'], 'background')
+	pvec = adt.X[idx, ].sum(axis = 0).A1
+	pvec /= pvec.sum()
+
+	adt.uns['background_probs'] = pvec
+
+def estimate_background_probs_threshold(adt, threshold):
+	adt.obs['counts'] = adt.X.sum(axis = 1).A1
+	adt.obs['hto_type'] = 'background'
+	adt.obs.loc[adt.obs['counts'] > threshold, 'hto_type'] = 'signal'
+
+	idx = np.isin(adt.obs['hto_type'], 'background')
+	pvec = adt.X[idx, ].sum(axis = 0).A1
+	pvec /= pvec.sum()
+
+	adt.uns['background_probs'] = pvec
 
 def estimate_probs(arr, pvec, alpha, alpha_noise, tol):
 	probs = np.zeros(pvec.size + 1)

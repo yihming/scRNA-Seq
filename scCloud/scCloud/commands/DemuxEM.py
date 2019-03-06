@@ -24,6 +24,8 @@ Options:
   --min-signal-hashtag <count>               Any cell/nucleus with less than <count> hashtags from the signal will be marked as unknown. [default: 10.0]
   --prior-on-samples <prior>                 The sparse prior put on samples.
   --random-state <seed>                      The random seed used in the KMeans algorithm to separate empty ADT droplets from others. [default: 0]
+  --hier-linkage <linkage>                   Linkage method of hierarchical clustering: 'ward', 'complete', 'single', or 'average'. [default: none]
+  --hard-threshold <threshold>               Instead of clustering, use manually set threshold to separate signal droplets from background. [default: -1.0]
 
   --generate-diagnostic-plots                Generate a series of diagnostic plots, including the background/signal between HTO counts, estimated background probabilities, HTO distributions of cells and non-cells etc.
   --generate-gender-plot <genes>             Generate violin plots using gender-specific genes (e.g. Xist). <gene> is a comma-separated list of gene names. 
@@ -54,6 +56,8 @@ Examples:
             'alpha_value' : self.args['--prior-on-samples'],
             'random_state' : int(self.args['--random-state']),
             'gen_plots' : self.args['--generate-diagnostic-plots'],
+            'hier_linkage' : self.args['--hier-linkage'],
+            'hard_threshold' : float(self.args['--hard-threshold']),
             'gen_gender_plot' : self.split_string(self.args['--generate-gender-plot'])
         }
 
