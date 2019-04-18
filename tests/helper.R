@@ -1,7 +1,7 @@
 library(Seurat)
 
-input_dir = "./inputs/"
-output_dir = "./outputs/"
+input_dir = "/software/inputs/"
+output_dir = "/software/outputs/"
 
 seurat_adt = read.csv(paste(output_dir, "experiment1_human_st_ADT.seurat.selected.csv", sep=""), sep = ",", header = TRUE, row.names = 1)
 seurat_adt = seurat_adt[1:8,]
