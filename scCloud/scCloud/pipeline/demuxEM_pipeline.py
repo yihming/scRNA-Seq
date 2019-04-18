@@ -19,6 +19,7 @@ def run_demuxEM_pipeline(input_adt_file, input_rna_file, output_name, **kwargs):
 	data = tools.read_input(input_rna_file, genome = kwargs['genome'], demux_ngene = kwargs['min_num_genes'])
 	print("RNA file is loaded.")
 	# run demuxEM
+
 	if kwargs['hier_linkage'] != 'none':
 		print('Use hierarchical clustering to estimate background probabilities...')
 		demuxEM.estimate_background_probs_hierarchical(adt, linkage = kwargs['hier_linkage'])
@@ -28,6 +29,7 @@ def run_demuxEM_pipeline(input_adt_file, input_rna_file, output_name, **kwargs):
 	else:
 		print('Use KMeans clustering to estimate background probabilities...')
 		demuxEM.estimate_background_probs(adt, random_state = kwargs['random_state'])
+	
 	print("Background probability distribution is estimated.")
 	demuxEM.demultiplex(data, adt, min_signal = kwargs['min_signal'], alpha = kwargs['alpha'], n_threads = kwargs['n_jobs'])
 	print("Demultiplexing is done.")
